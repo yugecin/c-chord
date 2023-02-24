@@ -105,7 +105,7 @@ vec2 map(vec3 p)
 //#define k(o) b=min(b, bkey(q+o));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
 #define k(o) b=min(b, bkey(q+o));w=max(w,-box(q+o, vec3(.75, 5.55, 2.)))
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = -1; i < 3; i++) {
 		vec3 oo = o * (i - 1) * 7;
 		vec3 m = i == 1 ? f : p;
 		w = min(w, key(oo + p - o*2.));
@@ -182,7 +182,7 @@ float softshadow(vec3 ro, vec3 rd)
 		}
 		float y = h*h/(2.0*ph);
 		float d = sqrt(h*h-y*y);
-		res = min(res, 6.*d/max(0.0,dist-y));
+		res = min(res, 18.*d/max(0.0,dist-y));
 		ph = h;
 		dist += h;
 	}
