@@ -97,20 +97,24 @@ vec2 map(vec3 p)
 	vec2 r = vec2(9e9, MAT_GROUND);
 	p.z += 2.;
 	vec3 offs = vec3(2.3,0.,0.);
-	float w = key(p - offs*2.);
+	float w = key(p);
+	w = min(w, key(p - offs*2.));
 	w = min(w, key(p - offs));
-	w = min(w, key(p));
 	w = min(w, key(p + offs));
 	w = min(w, key(p + offs*2.));
+	w = min(w, key(p + offs*3.));
+	w = min(w, key(p + offs*4.));
 
 	float b = 9e9;
 	// q = position adjusted for black keys //noexport
 	vec3 q = p + vec3(0.,2.8,1.3);
 //#define k(offs) b=min(b, bkey(q+offs));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
 #define k(offs) b=min(b, bkey(q+offs));w=max(w,-box(q+offs, vec3(.7, 5.5, 2.)))
-	k(-offs);
-	k(0.);
-	k(offs);
+	k(-offs*1.6);
+	k(-offs*.5);
+	k(offs*.6);
+	k(offs*2.45);
+	k(offs*3.55);
 
 	r = m(r, vec2(w - ROUNDING, MAT_KEY_WHITE));
 	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
