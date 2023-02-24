@@ -12,10 +12,13 @@ layout (location=4) uniform sampler2D tex;
 #define MAT_GROUND 1
 #define MAT_KEY_BLACK 2
 #define MAT_KEY_WHITE 3
+#define MAT_BLACK_NOISE 4
+#define MAT_BLACK_SHINY 5
 #define ROUNDING .1
 int i;
 vec3 gHitPosition = vec3(0);
 
+float rand(vec2 p){return fract(sin(dot(p.xy,vec2(12.9898,78.233)))*43758.5453);}
 mat2 rot2(float a){float s=sin(a),c=cos(a);return mat2(c,s,-s,c);}
 
 // https://iquilezles.org/articles/distfunctions/
@@ -59,7 +62,7 @@ float key(vec3 p)
 	vec4 w = opElongate(p, rndav3(1., 7.6, 0.));
 	float top = w.w + sdCappedCylinder(w.xyz - topoff, vec2(.1, .1));
 	return min(
-		length(max(abs(p) - rndav3(1.1, 7.5, 1.1), 0.)), // base
+		length(max(abs(p) - rndav3(1.1, 7.5, 1.12), 0.)), // base
 		max(top, -box(p-topoff-vec3(0.,0.,1.-ROUNDING), vec3(4., 10., 1.)))
 	) - .03;
 }
@@ -118,8 +121,9 @@ vec2 map(vec3 p)
 
 	r = m(r, vec2(w - ROUNDING, MAT_KEY_WHITE));
 	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
-	//r = m(r, vec2(dot(p,normalize(vec3(0.,-1.,0.4))), MAT_GROUND));
-	if (ground < r.x) return vec2(ground, MAT_GROUND);
+	r = m(r, vec2(length(max(abs(p.yz-vec2(8.1,2.4)) - vec2(.4,2.), 0.)) - .1, MAT_BLACK_NOISE));
+	r = m(r, vec2(length(max(abs(p.yz-vec2(-10.7,0.)) - vec2(3.,3.), 0.)) - .1, MAT_BLACK_NOISE));
+	if (ground < r.x) return vec2(ground, MAT_BLACK_SHINY);
 	return r;
 }
 
@@ -179,12 +183,14 @@ float softshadow(vec3 ro, vec3 rd)
 	return res;
 }
 
-vec3 getmat(float m)
+vec3 getmat(vec4 r)
 {
-	switch (int(m)) {
+	switch (int(r.w)) {
 	case MAT_GROUND: return vec3(.53,.23,.09);
 	case MAT_KEY_BLACK: return vec3(0.);
 	case MAT_KEY_WHITE: return vec3(1.);
+	case MAT_BLACK_NOISE: return vec3(.05+.05*rand(mod(vec2(r.z,r.y),10)));
+	case MAT_BLACK_SHINY: return vec3(0.);
 	}
 	return vec3(0., 1., 0.);
 }
@@ -230,11 +236,8 @@ void main()
 	}
 #endif
 
-
-	//vec3 ro = vec3(3, 14, -12) * 1.3;
-	//vec3 at = vec3(1, 0, -8);
-	vec3 ro = vec3(-3, -11, -3.2) * 1.27;
-	vec3 at = vec3(0,-11.9,-.4);
+	vec3 ro = vec3(-3., -11., -30.2);
+	vec3 at = vec3(0.);
 
 #if debugmov //noexport
 	ro = debug[0].xyz/20.; //noexport
@@ -279,18 +282,18 @@ void main()
 
 			if (result.x > 0.) { // hit
 				vec3 normal = norm(gHitPosition, result.y);
-				vec3 mat = getmat(result.w) * .3;
-				/*
+				vec3 mat = getmat(result) * .3;
 				// reflexxions
-				if (result.w == MAT_GROUND) {
+				/*
+				if (result.w == MAT_KEY_BLACK || result.w == MAT_KEY_WHITE) {
 					vec3 gg = gHitPosition;
 					rd = reflect(rd, normal);
 					gHitPosition += .001 * rd;
 					vec4 nr = march(gHitPosition, rd, 200);
 					if (result.x > 0.) {
 						vec3 nn = norm(gHitPosition, result.y);
-						vec3 m = getmat(nr.w);
-						mat = mix(mat, colorHit(nr, rd, nn, m) * .3, .3);
+						vec3 m = getmat(nr);
+						mat = mix(mat, colorHit(nr, rd, nn, m) * .3, .1);
 					}
 					gHitPosition = gg;
 				}
