@@ -1,0 +1,6 @@
+gcc -x c -c f.c -o f.o &&
+"Crinkler\crinkler.exe" f.o /OUT:c-chord-1920p.exe "/LIBPATH:C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib" kernel32.lib user32.lib opengl32.lib gdi32.lib /SUBSYSTEM:WINDOWS &&
+gcc -x c -c f.c -o f.o -DXRES=1280 -DYRES=720 &&
+"Crinkler\crinkler.exe" f.o /OUT:c-chord-720p.exe "/LIBPATH:C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib" kernel32.lib user32.lib opengl32.lib gdi32.lib /SUBSYSTEM:WINDOWS &&
+gcc -x c -c f.c -o f.o -DXRES=1280 -DYRES=720 -Dregisterclass -Dnopopup -Ddbg -Dnofullscreen &&
+"Crinkler\crinkler.exe" f.o /OUT:c-chord-720p-windowed-debug.exe "/LIBPATH:C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib" kernel32.lib user32.lib opengl32.lib gdi32.lib /SUBSYSTEM:WINDOWS
