@@ -1,8 +1,8 @@
 #version 430
-#define debugmov 1
+#define debugmov 0
 #define shadertoy 0
-#define doAA 0
-#define partialrender 0
+#define doAA 1
+#define partialrender 1
 #define iTime fpar[0].x
 layout (location=0) uniform vec4 fpar[2];
 layout (location=2) uniform vec4 debug[2]; //noexport
@@ -22,11 +22,6 @@ float rand(vec2 p){return fract(sin(dot(p.xy,vec2(12.9898,78.233)))*43758.5453);
 mat2 rot2(float a){float s=sin(a),c=cos(a);return mat2(c,s,-s,c);}
 
 // https://iquilezles.org/articles/distfunctions/
-float ss(float a, float b, float k)
-{
-	float h = clamp(0.5 - 0.5*(b+a)/k, 0.0, 1.0);
-	return mix(b, -a, h) + k*h*(1.0-h);
-}
 
 vec4 opElongate(vec3 p, vec3 h)
 {
@@ -95,8 +90,9 @@ float bkey(vec3 p)
 
 vec2 map(vec3 p)
 {
-	p.y += 10.;
+	p.xz *= rot2(-.06);
 	float ground = dot(p,vec3(0.,0.,-1.));
+	p.y += 10.;
 	vec2 r = vec2(9e9, MAT_GROUND);
 	p.z += 2.;
 	vec3 f = p; // p but rotated for the pressed keys
@@ -135,6 +131,8 @@ vec2 map(vec3 p)
 	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
 	r = m(r, vec2(length(max(abs(p.yz-vec2(8.1,2.4)) - vec2(.4,2.), 0.)) - .1, MAT_BLACK_NOISE));
 	r = m(r, vec2(length(max(abs(p.yz-vec2(-10.7,0.)) - vec2(3.,3.), 0.)) - .1, MAT_BLACK_NOISE));
+	// more backside for more shiny shit
+	r = m(r, vec2(length(max(abs(p.yz-vec2(-9.7,0.)) - vec2(2.05,2.85), 0.)) - .1, MAT_KEY_BLACK));
 	if (ground < r.x) return vec2(ground, MAT_BLACK_SHINY);
 	return r;
 }
@@ -195,22 +193,23 @@ float softshadow(vec3 ro, vec3 rd)
 	return res;
 }
 
-vec3 getmat(vec4 r)
+// w component is amount of reflection mix //noexport
+vec4 getmat(vec4 r)
 {
 	switch (int(r.w)) {
-	case MAT_GROUND: return vec3(.53,.23,.09);
-	case MAT_KEY_BLACK: return vec3(.007);
-	case MAT_KEY_WHITE: return vec3(1.);
-	case MAT_BLACK_NOISE: return vec3(.05+.05*rand(mod(vec2(r.z,r.y),10)));
-	case MAT_BLACK_SHINY: return vec3(0.);
+	case MAT_GROUND: return vec4(.53,.23,.09,.3);
+	case MAT_KEY_BLACK: return vec4(.007,.007,.007,.4);
+	case MAT_KEY_WHITE: return vec4(vec3(218.,216.,227.)/255., .6);
+	case MAT_BLACK_NOISE: return vec4(vec3(.05+.05*rand(mod(vec2(r.z,r.y),10))), 0.);
+	case MAT_BLACK_SHINY: return vec4(0.);
 	}
-	return vec3(0., 1., 0.);
+	return vec4(0., 1., 0., 3.);
 }
 
 vec3 colorHit(vec4 result, vec3 rd, vec3 normal, vec3 mat)
 {
 	// key light
-	vec3 lig = normalize(vec3(.3, -0.1, -0.6));
+	vec3 lig = normalize(vec3(-.2, -0.1, -0.6));
 	vec3 hal = normalize(lig-rd);
 	float dif = clamp(dot(normal, lig), .0, 1.) * softshadow(gHitPosition, lig);
 
@@ -248,8 +247,8 @@ void main()
 	}
 #endif
 
-	vec3 ro = vec3(-3., -11., -30.2);
-	vec3 at = vec3(0.);
+	vec3 ro = vec3(-13., 1., -11.);
+	vec3 at = vec3(-5., -10., 0.);
 
 #if debugmov //noexport
 	ro = debug[0].xyz/20.; //noexport
@@ -294,23 +293,22 @@ void main()
 
 			if (result.x > 0.) { // hit
 				vec3 normal = norm(gHitPosition, result.y);
-				vec3 mat = getmat(result) * .3;
+				vec4 mat = getmat(result) * .3;
 				// reflexxions
-				/*
-				if (result.w == MAT_KEY_BLACK || result.w == MAT_KEY_WHITE) {
+				if (mat.w > .0001) {
 					vec3 gg = gHitPosition;
 					rd = reflect(rd, normal);
 					gHitPosition += .001 * rd;
 					vec4 nr = march(gHitPosition, rd, 200);
 					if (result.x > 0.) {
 						vec3 nn = norm(gHitPosition, result.y);
-						vec3 m = getmat(nr);
-						mat = mix(mat, colorHit(nr, rd, nn, m) * .3, .1);
+						vec3 m = getmat(nr).xyz;
+						vec3 nc = colorHit(nr, rd, nn, m);
+						mat.xyz = mix(mat.xyz, nc * mat.w, mat.w);
 					}
 					gHitPosition = gg;
 				}
-				*/
-				col = colorHit(result, rd, normal, mat);
+				col = colorHit(result, rd, normal, mat.xyz);
 			}
 			resultcol += col;
 #if doAA == 1
