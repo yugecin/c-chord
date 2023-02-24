@@ -1,19 +1,15 @@
 #version 430
 #define debugmov 0
-#define shadertoy 0
+#define shadertoy 0 //noexport
 #define doAA 1
 #define partialrender 1
-#define iTime fpar[0].x
 layout (location=0) uniform vec4 fpar[2];
 layout (location=2) uniform vec4 debug[2]; //noexport
 layout (location=4) uniform sampler2D tex;
-#define PI 3.14159265359
-#define HALFPI 1.5707963268
-#define MAT_GROUND 1
-#define MAT_KEY_BLACK 2
-#define MAT_KEY_WHITE 3
-#define MAT_BLACK_NOISE 4
-#define MAT_BLACK_SHINY 5
+#define MAT_KEY_BLACK 0
+#define MAT_KEY_WHITE 1
+#define MAT_BLACK_NOISE 2
+#define MAT_BLACK_SHINY 3
 #define ROUNDING .1
 int i;
 vec3 gHitPosition = vec3(0);
@@ -93,7 +89,7 @@ vec2 map(vec3 p)
 	p.xz *= rot2(-.06);
 	float ground = dot(p,vec3(0.,0.,-1.));
 	p.y += 10.;
-	vec2 r = vec2(9e9, MAT_GROUND);
+	vec2 r = vec2(9e9, MAT_BLACK_SHINY);
 	p.z += 2.;
 	vec3 f = p; // p but rotated for the pressed keys
 	f.y -= 5.;
@@ -197,7 +193,6 @@ float softshadow(vec3 ro, vec3 rd)
 vec4 getmat(vec4 r)
 {
 	switch (int(r.w)) {
-	case MAT_GROUND: return vec4(.53,.23,.09,.3);
 	case MAT_KEY_BLACK: return vec4(.007,.007,.007,.4);
 	case MAT_KEY_WHITE: return vec4(vec3(218.,216.,227.)/255., .6);
 	case MAT_BLACK_NOISE: return vec4(vec3(.05+.05*rand(mod(vec2(r.z,r.y),10))), 0.);
@@ -275,18 +270,14 @@ void main()
 #else
 	int aaa = 0, aab = 0;
 #endif
-#if shadertoy == 1
-			vec2 o = v + vec2(float(aab),float(aab)) / 2. - 0.5;
-			vec2 uv = (o-.5*iResolution.xy)/iResolution.y;
-#else
-			//vec2 uv=v;uv.y/=1.77;
-			//vec2 uv=v;uv.y/=1.77;
+#if shadertoy == 1 //noexport
+			vec2 o = v + vec2(float(aab),float(aab)) / 2. - 0.5; //noexport
+			vec2 uv = (o-.5*iResolution.xy)/iResolution.y; //noexport
+#else //noexport
 			vec2 iResolution = fpar[0].xy;
-			//vec2 o = v*iResolution + vec2(float(aaa),float(aab)) / 4. - 0.5;
-			//vec2 uv = (o-.5*iResolution)/iResolution.y;
 			vec2 uv = v*(iResolution + vec2(float(aaa),float(aab))/4)/iResolution;
 			uv.y /= iResolution.x/iResolution.y;
-#endif
+#endif //noexport
 			vec3 rd = rdbase*normalize(vec3(uv,1)), col = vec3(0.);
 
 			vec4 result = march(ro, rd, 200);
