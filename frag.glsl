@@ -110,9 +110,9 @@ vec2 map(vec3 p)
 
 	float b = 9e9;
 	// q = position adjusted for black keys //noexport
-	vec3 q = p + vec3(0.,2.8,1.3);
+	vec3 q = p + vec3(0.,2.8,1.4);
 //#define k(offs) b=min(b, bkey(q+offs));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
-#define k(offs) b=min(b, bkey(q+offs));w=max(w,-box(q+offs, vec3(.7, 5.5, 2.)))
+#define k(offs) b=min(b, bkey(q+offs));w=max(w,-box(q+offs, vec3(.75, 5.55, 2.)))
 	k(-offs*1.6);
 	k(-offs*.5);
 	k(offs*.6);
