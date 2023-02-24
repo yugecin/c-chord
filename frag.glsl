@@ -104,25 +104,32 @@ vec2 map(vec3 p)
 	f.yz *= rot2(.07);
 	f.y += 5.;
 	f.z -= .8;
-	vec3 offs = vec3(2.3,0.,0.);
-	float w = key(f);
-	w = min(w, key(p - offs*2.));
-	w = min(w, key(p - offs));
-	w = min(w, key(p + offs));
-	w = min(w, key(f + offs*2.));
-	w = min(w, key(p + offs*3.));
-	w = min(w, key(f + offs*4.));
+	vec3 o = vec3(2.3,0.,0.);
+	float w = 9e9;
 
 	float b = 9e9;
 	// q = position adjusted for black keys //noexport
 	vec3 q = p + vec3(0.,2.8,1.4);
-//#define k(offs) b=min(b, bkey(q+offs));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
-#define k(offs) b=min(b, bkey(q+offs));w=max(w,-box(q+offs, vec3(.75, 5.55, 2.)))
-	k(-offs*1.6);
-	k(-offs*.5);
-	k(offs*.6);
-	k(offs*2.45);
-	k(offs*3.55);
+//#define k(o) b=min(b, bkey(q+o));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
+#define k(o) b=min(b, bkey(q+o));w=max(w,-box(q+o, vec3(.75, 5.55, 2.)))
+
+	for (int i = 0; i < 3; i++) {
+		vec3 oo = o * (i - 1) * 7;
+		vec3 m = i == 1 ? f : p;
+		w = min(w, key(oo + p - o*2.));
+		w = min(w, key(oo + p - o));
+		w = min(w, key(oo + m));
+		w = min(w, key(oo + p + o));
+		w = min(w, key(oo + m + o*2.));
+		w = min(w, key(oo + p + o*3.));
+		w = min(w, key(oo + m + o*4.));
+
+		k(oo + -o*1.6);
+		k(oo + -o*.5);
+		k(oo + o*.6);
+		k(oo + o*2.45);
+		k(oo + o*3.55);
+	}
 
 	r = m(r, vec2(w - ROUNDING, MAT_KEY_WHITE));
 	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
