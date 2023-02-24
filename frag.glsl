@@ -99,14 +99,19 @@ vec2 map(vec3 p)
 	float ground = dot(p,vec3(0.,0.,-1.));
 	vec2 r = vec2(9e9, MAT_GROUND);
 	p.z += 2.;
+	vec3 f = p; // p but rotated for the pressed keys
+	f.y -= 5.;
+	f.yz *= rot2(.07);
+	f.y += 5.;
+	f.z -= .8;
 	vec3 offs = vec3(2.3,0.,0.);
-	float w = key(p);
+	float w = key(f);
 	w = min(w, key(p - offs*2.));
 	w = min(w, key(p - offs));
 	w = min(w, key(p + offs));
-	w = min(w, key(p + offs*2.));
+	w = min(w, key(f + offs*2.));
 	w = min(w, key(p + offs*3.));
-	w = min(w, key(p + offs*4.));
+	w = min(w, key(f + offs*4.));
 
 	float b = 9e9;
 	// q = position adjusted for black keys //noexport
@@ -187,7 +192,7 @@ vec3 getmat(vec4 r)
 {
 	switch (int(r.w)) {
 	case MAT_GROUND: return vec3(.53,.23,.09);
-	case MAT_KEY_BLACK: return vec3(0.);
+	case MAT_KEY_BLACK: return vec3(.007);
 	case MAT_KEY_WHITE: return vec3(1.);
 	case MAT_BLACK_NOISE: return vec3(.05+.05*rand(mod(vec2(r.z,r.y),10)));
 	case MAT_BLACK_SHINY: return vec3(0.);
