@@ -9,9 +9,10 @@ layout (location=2) uniform vec4 debug[2]; //noexport
 layout (location=4) uniform sampler2D tex;
 #define PI 3.14159265359
 #define HALFPI 1.5707963268
-#define MAT_BG 1
-#define MAT_BLACK 2
-#define MAT_WHITE 3
+#define MAT_GROUND 1
+#define MAT_KEY_BLACK 2
+#define MAT_KEY_WHITE 3
+#define ROUNDING .1
 int i;
 vec3 gHitPosition = vec3(0);
 
@@ -35,36 +36,66 @@ float sdCappedCylinder(vec3 p, vec2 h)
 	return min(max(d.x,d.y),.0) + length(max(d,.0));
 }
 
+// better box that works for subtraction //noexport
+float box(vec3 p, vec3 b)
+{
+	vec3 q = abs(p) - b;
+	return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
 vec2 m(vec2 b, vec2 a){return a.x<b.x?a:b;}
+
+// sizes are cm (div 2 ofc because abs) //noexport
+
+// rounding-adjusted vec3 //noexport
+vec3 rndav3(float x, float y, float z)
+{
+	return vec3(x,y,z)-ROUNDING;
+}
 
 float key(vec3 p)
 {
-	vec4 w = opElongate(p, vec3(1., 7.6, 0.));
-	float top = w.w + sdCappedCylinder(w.xyz - vec3(0., 0., -1.05), vec2(.1, .1));
-	top = max(top, -(length(max(abs(p) - vec3(1.1, 10., 9.), 0.))));
+	vec3 topoff = vec3(0., 0., -1.05);
+	vec4 w = opElongate(p, rndav3(1., 7.6, 0.));
+	float top = w.w + sdCappedCylinder(w.xyz - topoff, vec2(.1, .1));
 	return min(
-		length(max(abs(p) - vec3(1.1, 7.5, 1.), 0.)), // base
-		top
+		length(max(abs(p) - rndav3(1.1, 7.5, 1.1), 0.)), // base
+		max(top, -box(p-topoff-vec3(0.,0.,1.-ROUNDING), vec3(4., 10., 1.)))
 	) - .03;
+}
+
+float bkey(vec3 p)
+{
+	vec3 q = p;
+	q.y -= 3.93;
+	q.z += .086;
+	vec3 r = q;
+	r.yz *= rot2(.9);
+	r.y -= .31;
+	float k = min(
+		length(max(abs(p + vec3(0.,0.2,0.)) - rndav3(.5, 4.7, 1.), 0.)),
+		length(max(abs(r) - rndav3(.5, .75, .98), 0.))
+	);
+	k = min(k, length(max(abs(q-vec3(0.,0.,1.006)) - rndav3(.5, 1.385, .9), 0.)));
+	// TODO: do this or not?, top rounding is cool but it messes with the side rounding
+#if 1
+	k = max(k, min(
+		length(p.yz-vec2(4.09,-.3)) - .65,
+		min(
+			dot(p+vec3(0.,0.,.7),vec3(0.,0.,-1.)),
+			dot(p+vec3(0.,-4.,0.),vec3(0.,1.,0.))
+		)
+	));
+#endif
+	return k;
 }
 
 vec2 map(vec3 p)
 {
 	p.y += 10.;
-	float ground = dot(p,normalize(vec3(0.,0.,-1.)));
-	vec2 r = vec2(9e9, MAT_BLACK);
+	float ground = dot(p,vec3(0.,0.,-1.));
+	vec2 r = vec2(9e9, MAT_GROUND);
 	p.z += 2.;
-	/*
-	this crashes something :D
-	float x = 0.;
-	//for (float x = -5.; x < 5.; x += 1.) {
-		vec3 q = p;
-		q.x += x * .23;
-		vec2 key = vec2(length(max(abs(q) - vec3(.22, 1.50, .2), 0.)), MAT_WHITE);
-		r = (m, key);
-	//}
-	*/
-	//r = m(r, keys(p));
 	vec3 offs = vec3(2.3,0.,0.);
 	float w = key(p - offs*2.);
 	w = min(w, key(p - offs));
@@ -72,8 +103,19 @@ vec2 map(vec3 p)
 	w = min(w, key(p + offs));
 	w = min(w, key(p + offs*2.));
 
-	r = m(r, vec2(w, MAT_WHITE));
-	if (ground < r.x) return vec2(ground, MAT_BG);
+	float b = 9e9;
+	// q = position adjusted for black keys //noexport
+	vec3 q = p + vec3(0.,2.8,1.3);
+//#define k(offs) b=min(b, bkey(q+offs));w=max(w,-(length(max(abs(q) - vec3(3.), 0.))))
+#define k(offs) b=min(b, bkey(q+offs));w=max(w,-box(q+offs, vec3(.7, 5.5, 2.)))
+	k(-offs);
+	k(0.);
+	k(offs);
+
+	r = m(r, vec2(w - ROUNDING, MAT_KEY_WHITE));
+	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
+	//r = m(r, vec2(dot(p,normalize(vec3(0.,-1.,0.4))), MAT_GROUND));
+	if (ground < r.x) return vec2(ground, MAT_GROUND);
 	return r;
 }
 
@@ -136,9 +178,9 @@ float softshadow(vec3 ro, vec3 rd)
 vec3 getmat(float m)
 {
 	switch (int(m)) {
-	case MAT_BG: return vec3(.53,.23,.09);
-	case MAT_BLACK: return vec3(.0);
-	case MAT_WHITE: return vec3(1.);
+	case MAT_GROUND: return vec3(.53,.23,.09);
+	case MAT_KEY_BLACK: return vec3(0.);
+	case MAT_KEY_WHITE: return vec3(1.);
 	}
 	return vec3(0., 1., 0.);
 }
@@ -236,7 +278,7 @@ void main()
 				vec3 mat = getmat(result.w) * .3;
 				/*
 				// reflexxions
-				if (result.w == MAT_BG) {
+				if (result.w == MAT_GROUND) {
 					vec3 gg = gHitPosition;
 					rd = reflect(rd, normal);
 					gHitPosition += .001 * rd;
