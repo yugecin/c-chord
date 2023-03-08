@@ -31,44 +31,15 @@ char *vsh=
 ;
 #include "frag.glsl.c"
 
-PIXELFORMATDESCRIPTOR pfd={0,1,PFD_SUPPORT_OPENGL|PFD_DOUBLEBUFFER, 32, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0};
+PIXELFORMATDESCRIPTOR pfd={
+	0, 1, PFD_SUPPORT_OPENGL|PFD_DOUBLEBUFFER, 32, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0
+};
 
 #ifdef registerclass
 WNDCLASSEX wc = {0};
 #endif
 
-/*
-DEVMODE dmScreenSettings={ {0},0,0,sizeof(DEVMODE),0,DM_PELSWIDTH|DM_PELSHEIGHT,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1024,768,0,0,0,0,0,0,0,0,0,0};
-
-/*
-static DEVMODE dmScreenSettings = { {0},
-    #if _MSC_VER < 1400
-    0,0,148,0,0x001c0000,{0},0,0,0,0,0,0,0,0,0,{0},0,32,XRES,YRES,0,0,      // Visual C++ 6.0
-    #else
-    0,0,156,0,0x001c0000,{0},0,0,0,0,0,{0},0,32,XRES,YRES,{0}, 0,           // Visuatl Studio 2005
-    #endif
-    #if(WINVER >= 0x0400)
-    0,0,0,0,0,0,
-    #if (WINVER >= 0x0500) || (_WIN32_WINNT >= 0x0400)
-    0,0
-    #endif
-    #endif
-    };
-    */
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// crt emulation
-/////////////////////////////////////////////////////////////////////////////////
-
-	//int _fltused = 1;
-
-/////////////////////////////////////////////////////////////////////////////////
-// entry point for the executable if msvcrt is not used
-/////////////////////////////////////////////////////////////////////////////////
-//#pragma code_seg(".main")
 #ifdef nofullscreen
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -186,20 +157,6 @@ void WinMainCRTStartup(void)
 		Sleep(0);
 	}
 #endif
-	/*
-	GLuint p = ((PFNGLCREATEPROGRAMPROC)wglGetProcAddress("glCreateProgram"))();
-	GLuint s = k =((PFNGLCREATESHADERPROC)(wglGetProcAddress("glCreateShader")))(GL_VERTEX_SHADER);
-	((PFNGLSHADERSOURCEPROC)wglGetProcAddress("glShaderSource"))(s,1, &vsh,0);
-	((PFNGLCOMPILESHADERPROC)wglGetProcAddress("glCompileShader"))(s);
-	((PFNGLATTACHSHADERPROC)wglGetProcAddress("glAttachShader"))(p,s);
-	s = ((PFNGLCREATESHADERPROC)
-	wglGetProcAddress("glCreateShader"))(GL_FRAGMENT_SHADER);
-	((PFNGLSHADERSOURCEPROC)wglGetProcAddress("glShaderSource"))(s,1, &fsh,0);
-	((PFNGLCOMPILESHADERPROC)wglGetProcAddress("glCompileShader"))(s);
-	((PFNGLATTACHSHADERPROC)wglGetProcAddress("glAttachShader"))(p,s);
-	((PFNGLLINKPROGRAMPROC)wglGetProcAddress("glLinkProgram"))(p);
-	((PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram"))(p);
-	*/
 	GLuint p = ((PFNGLCREATESHADERPROGRAMVPROC)wglGetProcAddress("glCreateShaderProgramv"))(GL_VERTEX_SHADER, 1, &vsh);
 	GLuint s = ((PFNGLCREATESHADERPROGRAMVPROC)wglGetProcAddress("glCreateShaderProgramv"))(GL_FRAGMENT_SHADER, 1, &fragSource);
 	((PFNGLGENPROGRAMPIPELINESPROC)wglGetProcAddress("glGenProgramPipelines"))(1, &k);
@@ -217,38 +174,11 @@ void WinMainCRTStartup(void)
 #ifndef nofullscreen
 	ShowCursor(0);
 #endif
-	//glActiveTexture(GL_TEXTURE0);
 	((PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture"))(GL_TEXTURE0); // TODO: seems to work without, remove?
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//((PFNGLGENTEXTURESEXTPROC)wglGetProcAddress("glGenTexturesEXT"))(1, &tex);
-	//((PFNGLBINDTEXTURESPROC)wglGetProcAddress("glBindTextures"))(GL_TEXTURE_2D, 1, &tex);
-	//int x=GL_LINEAR;
-	//((PFNGLTEXPARAMETERIIVPROC)wglGetProcAddress("glTexParameterIiv"))(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &x);
-	//((PFNGLTEXPARAMETERIIVPROC)wglGetProcAddress("glTexParameterIiv"))(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &x);
-	/*
-	GetClientRect(hWnd, &rect);
-	for (t=0;t<6;t++){
-		log[t]='0' + (rect.right%10);
-		rect.right/=10;
-	}
-	log[6]=0;
-	MessageBoxA(NULL, log, "hi", MB_OK);
-	ExitProcess(1);
-	*/
-
-	/*
-	HMONITOR monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-	MONITORINFO info;
-	info.cbSize = sizeof(MONITORINFO);
-	GetMonitorInfo(monitor, &info);
-	rect.right = info.rcMonitor.right - info.rcMonitor.left;
-	rect.bottom = info.rcMonitor.bottom - info.rcMonitor.top;
-	*/
-
-	//glViewport(0, 0, XRES, YRES);
 
 	fparams[2] = 0.0f;
 	fparams[3] = 0.0f;

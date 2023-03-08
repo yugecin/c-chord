@@ -18,12 +18,12 @@ float rand(vec2 p){return fract(sin(dot(p.xy,vec2(12.9898,78.233)))*43758.5453);
 mat2 rot2(float a){float s=sin(a),c=cos(a);return mat2(c,s,-s,c);}
 
 // https://iquilezles.org/articles/distfunctions/
-
 vec4 opElongate(vec3 p, vec3 h)
 {
 	return vec4(p-clamp(p,-h,h),.0);
 }
 
+// https://iquilezles.org/articles/distfunctions/
 float sdCappedCylinder(vec3 p, vec2 h)
 {
 	vec2 d = abs(vec2(length(p.xy),p.z)) - h;
@@ -31,6 +31,7 @@ float sdCappedCylinder(vec3 p, vec2 h)
 }
 
 // better box that works for subtraction //noexport
+// https://iquilezles.org/articles/distfunctions/
 float box(vec3 p, vec3 b)
 {
 	vec3 q = abs(p) - b;
@@ -158,6 +159,7 @@ vec4 march(vec3 ro, vec3 rd, int maxSteps)
 	return r;
 }
 
+// sourced from https://www.shadertoy.com/view/lsKcDD
 float calcAO(vec3 pos, vec3 nor )
 {
 	float occ = 0.0;
@@ -171,6 +173,7 @@ float calcAO(vec3 pos, vec3 nor )
 	return clamp( 1.0 - 1.5*occ, 0.0, 1.0 );
 }
 
+// https://iquilezles.org/articles/rmshadows/
 float softshadow(vec3 ro, vec3 rd)
 {
 	float res = 1.0;
@@ -203,6 +206,7 @@ vec4 getmat(vec4 r)
 
 vec3 colorHit(vec4 result, vec3 rd, vec3 normal, vec3 mat)
 {
+	// https://www.shadertoy.com/view/lsKcDD
 	// key light
 	vec3 lig = normalize(vec3(-.2, -0.1, -0.6));
 	vec3 hal = normalize(lig-rd);
