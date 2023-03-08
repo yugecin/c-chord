@@ -9,8 +9,7 @@ layout (location=4) uniform sampler2D tex;
 #define MAT_KEY_BLACK 0
 #define MAT_KEY_WHITE 1
 #define MAT_BLACK_NOISE 2
-#define MAT_BLACK_NOISE_LOGO 3
-#define MAT_BLACK_SHINY 4
+#define MAT_BLACK_SHINY 3
 #define ROUNDING .1
 int i;
 vec3 gHitPosition = vec3(0);
@@ -127,7 +126,7 @@ vec2 map(vec3 p)
 	r = m(r, vec2(w - ROUNDING, MAT_KEY_WHITE));
 	r = m(r, vec2(b - ROUNDING, MAT_KEY_BLACK));
 	r = m(r, vec2(length(max(abs(p.yz-vec2(8.1,2.4)) - vec2(.4,2.), 0.)) - .1, MAT_BLACK_NOISE));
-	r = m(r, vec2(length(max(abs(p.yz-vec2(-10.7,0.)) - vec2(3.,3.), 0.)) - .1, MAT_BLACK_NOISE_LOGO));
+	r = m(r, vec2(length(max(abs(p.yz-vec2(-10.7,0.)) - vec2(3.,3.), 0.)) - .1, MAT_BLACK_NOISE));
 	// more backside for more shiny shit
 	r = m(r, vec2(length(max(abs(p.yz-vec2(-9.7,0.)) - vec2(2.05,2.85), 0.)) - .1, MAT_KEY_BLACK));
 	if (ground < r.x) return vec2(ground, MAT_BLACK_SHINY);
@@ -196,8 +195,7 @@ vec4 getmat(vec4 r)
 	switch (int(r.w)) {
 	case MAT_KEY_BLACK: return vec4(.007,.007,.007,.4);
 	case MAT_KEY_WHITE: return vec4(vec3(218.,216.,227.)/255., .6);
-	case MAT_BLACK_NOISE:
-	case MAT_BLACK_NOISE_LOGO: return vec4(vec3(.05+.05*rand(mod(vec2(r.z,r.y),10))), 0.);
+	case MAT_BLACK_NOISE: return vec4(vec3(.05+.05*rand(mod(vec2(r.z,r.y),10))), 0.);
 	case MAT_BLACK_SHINY: return vec4(0.);
 	}
 	return vec4(0., 1., 0., 3.);
@@ -205,36 +203,6 @@ vec4 getmat(vec4 r)
 
 vec3 colorHit(vec4 result, vec3 rd, vec3 normal, vec3 mat)
 {
-	if (result.w == MAT_BLACK_NOISE_LOGO) {
-		vec2 mb = gHitPosition.xy;
-		// x-4 is mid, height is 4 so x is -8 to 0
-		if (mb.x > -8. && mb.x < 0. && mb.y < -18.7 && mb.y > -22.7) {
-			mb -= vec2(-8., -22.7);
-			mb /= vec2(8., 4.);
-			float a = .2, b = .8;
-			if (mb.x > .5) {
-				b = .2;a = .8;
-			}
-			mb.x = abs(mb.x-.5)*2.;
-			if (mb.y > .33) {
-				float y = (mb.y-.33)/.66;
-				if (mb.x < .715) {
-					float x = mb.x/.715;
-					if (x > .5 && (x-.5)*2. > 1.-y) {
-						return vec3(1.)*b;
-					} else if (x > 1.-y) {
-						return vec3(1.)*a;
-					}
-				} else if ((mb.x-.715)/.285<y) {
-					return vec3(1.)*b;
-				}
-			}
-			if (mb.x < mb.y) {
-				return vec3(1.)*b;
-			}
-		}
-	}
-
 	// key light
 	vec3 lig = normalize(vec3(-.2, -0.1, -0.6));
 	vec3 hal = normalize(lig-rd);
